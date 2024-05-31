@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+        import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -37,23 +37,23 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(withDefaults()) // Por defecto Spring va a buscar un bean con el nombre "corsConfigurationSource"
+                .csrf((csrf) -> csrf.disable())
+                .cors(withDefaults()) //por defecto spring va a buscar un bean con el nombre "corsConfigurationSource".
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/public/**").permitAll() // No aplica autorización a "api/public/"
+                                .requestMatchers("/api/public").permitAll()
                                 .requestMatchers("/api/admin/**").hasAuthority("administrador")
                                 .requestMatchers("/api/client/**").hasAuthority("cliente")
-                                .anyRequest().authenticated() // Cualquier otro, tiene que estar al menos autenticado, es decir, que tenga un jwt válido
+                                .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2ResourceServer ->
                         oauth2ResourceServer
-                                .jwt(jwt -> jwt
-                                        .decoder(jwtDecoder())
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                .jwt(jwt ->
+                                        jwt
+                                                .decoder(jwtDecoder())
+                                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
                                 )
                 );
-
         return http.build();
     }
 
@@ -74,7 +74,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
+    JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromOidcIssuerLocation(issuer);
 
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
@@ -89,7 +89,8 @@ public class SecurityConfiguration {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthoritiesClaimName(audience + "/roles");
+        String audience = System.getenv("auth0.audience");
+        converter.setAuthoritiesClaimName(audience+"/roles");
         converter.setAuthorityPrefix("");
 
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
